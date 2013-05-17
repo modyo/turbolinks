@@ -50,10 +50,13 @@ fetchHistory = (state) ->
   cacheCurrentPage()
 
   if page = pageCache[state.position]
-    xhr?.abort()
-    changePage page.title, page.body
-    recallScrollPosition page
-    triggerEvent 'page:restore'
+    if ModyoCore.blackList(document.location.href) 
+      fetchReplacement document.location.href
+    else  
+      xhr?.abort()
+      changePage page.title, page.body
+      recallScrollPosition page
+      triggerEvent 'page:restore'
   else
     fetchReplacement document.location.href
 
