@@ -52,7 +52,10 @@ beforeFetch = (cb) ->
   if go
     cb()
   else
-    window.history.replaceState window.WarningExit.oldState, pageCache[window.WarningExit.oldState.position].body, pageCache[window.WarningExit.oldState.position].url
+    try
+      window.history.replaceState window.WarningExit.oldState, pageCache[window.WarningExit.oldState.position].body, pageCache[window.WarningExit.oldState.position].url
+    catch error
+      null
 
 fetchHistory = (state) ->
   if page = pageCache[state.position]
