@@ -27,21 +27,34 @@ Turbolinks is designed to be as light-weight as possible (so you won't think twi
 Events
 ------
 
-With Turbolinks pages will change without a full reload, so you can't rely on `DOMContentLoaded` or `jQuery.ready()` to trigger your code. Instead Turbolinks fires events on `document` to provide hooks into the lifecycle of the page:
+With Turbolinks pages will change without a full reload, so you can't rely on `DOMContentLoaded` or `jQuery.ready()` to trigger your code. Instead Turbolinks fires events on `document` to provide hooks into the lifecycle of the page.
 
-*Load* a fresh version of a page from the server:
+***Load* a fresh version of a page from the server:**
+* `page:before-change` a Turbolinks-enabled link has been clicked *(see below for more details)*
 * `page:fetch` starting to fetch a new target page
 * `page:receive` the page has been fetched from the server, but not yet parsed
 * `page:change` the page has been parsed and changed to the new version
 * `page:load` is fired at the end of the loading process.
 
-Turbolinks caches 10 of these page loads. It listens to the [popstate](https://developer.mozilla.org/en-US/docs/DOM/Manipulating_the_browser_history#The_popstate_event) event and attempts restore page state from the cache when it's triggered. When `popstate` is fired the following process happens:
+Handlers bound to the `page:before-change` event may return `false`, which will cancel the Turbolinks process. 
 
-*Restore* a cached page from the client-side cache:
+By default, Turbolinks caches 10 of these page loads. It listens to the [popstate](https://developer.mozilla.org/en-US/docs/DOM/Manipulating_the_browser_history#The_popstate_event) event and attempts to restore page state from the cache when it's triggered. When `popstate` is fired the following process happens:
+
+***Restore* a cached page from the client-side cache:**
 * `page:change` page has changed to the cached page.
 * `page:restore` is fired at the end of restore process.
 
-So if you wanted to have a client-side spinner, you could listen for `page:fetch` to start it and `page:receive` to stop it.
+The number of pages Turbolinks caches can be configured to suit your application's needs:
+
+```javascript
+// View the current cache size
+Turbolinks.pagesCached();
+
+// Set the cache size
+Turbolinks.pagesCached(20);
+```
+
+To implement a client-side spinner, you could listen for `page:fetch` to start it and `page:receive` to stop it.
 
     document.addEventListener("page:fetch", startSpinner);
     document.addEventListener("page:receive", stopSpinner);
@@ -98,7 +111,10 @@ Asset change detection
 
 You can track certain assets, like application.js and application.css, that you want to ensure are always of the latest version inside a Turbolinks session. This is done by marking those asset links with data-turbolinks-track, like so:
 
-```<link href="/assets/application-9bd64a86adb3cd9ab3b16e9dca67a33a.css" rel="stylesheet" type="text/css" data-turbolinks-track>```
+```html
+<link href="/assets/application-9bd64a86adb3cd9ab3b16e9dca67a33a.css" rel="stylesheet"
+      type="text/css" data-turbolinks-track>
+```
 
 If those assets change URLs (embed an md5 stamp to ensure this), the page will do a full reload instead of going through Turbolinks. This ensures that all Turbolinks sessions will always be running off your latest JavaScript and CSS.
 
@@ -108,7 +124,7 @@ When this happens, you'll technically be requesting the same page twice. Once th
 Evaluating script tags
 ----------------------
 
-Turbolinks will evaluate any script tags in pages it visit, if those tags do not have a type or if the type is text/javascript. All other script tags will be ignored.
+Turbolinks will evaluate any script tags in pages it visits, if those tags do not have a type or if the type is text/javascript. All other script tags will be ignored.
 
 As a rule of thumb when switching to Turbolinks, move all of your javascript tags inside the `head` and then work backwards, only moving javascript code back to the body if absolutely necessary. If you have any script tags in the body you do not want to be re-evaluated then you can set the `data-turbolinks-eval` attribute to `false`:
 
@@ -146,6 +162,10 @@ Installation
 1. Add `//= require turbolinks` to your Javascript manifest file (usually found at `app/assets/javascripts/application.js`).
 1. Restart your server and you're now using turbolinks!
 
+Language Ports
+--------------
+
+* [Flask Turbolinks](https://github.com/lepture/flask-turbolinks) (Python Flask)
 
 Credits
 -------
