@@ -9,67 +9,45 @@ xhr            = null
 
 
 fetchReplacement = (url) ->
-  beforeFetch ->
-    triggerEvent 'page:fetch'
-  
-    # Remove hash from url to ensure IE 10 compatibility
-    safeUrl = removeHash url
-  
-    xhr?.abort()
-    xhr = new XMLHttpRequest
-    xhr.open 'GET', safeUrl, true
-    xhr.setRequestHeader 'Accept', 'text/html, application/xhtml+xml, application/xml'
-    xhr.setRequestHeader 'X-XHR-Referer', referer
-  
-    xhr.onload = ->
-      triggerEvent 'page:receive'
-  
-      if doc = processResponse()
-        reflectNewUrl url
-        changePage extractTitleAndBody(doc)...
-        reflectRedirectedUrl()
-        if document.location.hash
-          document.location.href = document.location.href
-        else
-          resetScrollPosition()
-        triggerEvent 'page:load'
+  triggerEvent 'page:fetch'
+
+  # Remove hash from url to ensure IE 10 compatibility
+  safeUrl = removeHash url
+
+  xhr?.abort()
+  xhr = new XMLHttpRequest
+  xhr.open 'GET', safeUrl, true
+  xhr.setRequestHeader 'Accept', 'text/html, application/xhtml+xml, application/xml'
+  xhr.setRequestHeader 'X-XHR-Referer', referer
+
+  xhr.onload = ->
+    triggerEvent 'page:receive'
+
+    if doc = processResponse()
+      reflectNewUrl url
+      changePage extractTitleAndBody(doc)...
+      reflectRedirectedUrl()
+      if document.location.hash
+        document.location.href = document.location.href
       else
-        document.location.href = url
-  
-    xhr.onloadend = -> xhr = null
-    xhr.onabort   = -> rememberCurrentUrl()
-    xhr.onerror   = -> document.location.href = url
-  
-    xhr.send()
-
-beforeFetch = (cb) ->
-  go = triggerEvent('page:beforeFetch')
-  console.log('go')
-  console.log(go)
-  if go
-    cb()
-  else
-    try
-      window.history.replaceState window.WarningExit.oldState, pageCache[window.WarningExit.oldState.position].body, pageCache[window.WarningExit.oldState.position].url
-    catch error
-      null
-
-fetchHistory = (state) ->
-  if page = pageCache[state.position]
-    if ModyoCore.blackList(document.location.href)
-      cacheCurrentPage()
-      fetchReplacement document.location.href
+        resetScrollPosition()
+      triggerEvent 'page:load'
     else
-      window.WarningExit.oldState = state
-      beforeFetch ->
-        cacheCurrentPage()
-        xhr?.abort()
-        changePage page.title, page.body
-        recallScrollPosition page
-        triggerEvent 'page:restore'
-  else
-    cacheCurrentPage()
-    fetchReplacement document.location.href
+      document.location.href = url
+
+  xhr.onloadend = -> xhr = null
+  xhr.onabort   = -> rememberCurrentUrl()
+  xhr.onerror   = -> document.location.href = url
+
+  xhr.send()
+
+fetchHistory = (position) ->
+  cacheCurrentPage()
+  page = pageCache[position]
+  xhr?.abort()
+  changePage page.title, page.body
+  recallScrollPosition page
+  triggerEvent 'page:restore'
 
 
 cacheCurrentPage = ->
@@ -118,7 +96,6 @@ removeNoscriptTags = ->
 reflectNewUrl = (url) ->
   if url isnt referer
     window.history.pushState { turbolinks: true, position: currentState.position + 1 }, '', url
-    window.WarningExit.oldState = window.history.state
 
 reflectRedirectedUrl = ->
   if location = xhr.getResponseHeader 'X-XHR-Redirected-To'
