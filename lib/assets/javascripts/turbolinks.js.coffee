@@ -9,37 +9,38 @@ xhr            = null
 
 
 fetchReplacement = (url) ->
-  triggerEvent 'page:fetch'
-
-  # Remove hash from url to ensure IE 10 compatibility
-  safeUrl = removeHash url
-
-  xhr?.abort()
-  xhr = new XMLHttpRequest
-  xhr.open 'GET', safeUrl, true
-  xhr.setRequestHeader 'Accept', 'text/html, application/xhtml+xml, application/xml'
-  xhr.setRequestHeader 'X-XHR-Referer', referer
-
-  xhr.onload = ->
-    triggerEvent 'page:receive'
-
-    if doc = processResponse()
-      reflectNewUrl url
-      changePage extractTitleAndBody(doc)...
-      reflectRedirectedUrl()
-      if document.location.hash
-        document.location.href = document.location.href
+  beforeFetch ->
+    triggerEvent 'page:fetch'
+  
+    # Remove hash from url to ensure IE 10 compatibility
+    safeUrl = removeHash url
+  
+    xhr?.abort()
+    xhr = new XMLHttpRequest
+    xhr.open 'GET', safeUrl, true
+    xhr.setRequestHeader 'Accept', 'text/html, application/xhtml+xml, application/xml'
+    xhr.setRequestHeader 'X-XHR-Referer', referer
+  
+    xhr.onload = ->
+      triggerEvent 'page:receive'
+  
+      if doc = processResponse()
+        reflectNewUrl url
+        changePage extractTitleAndBody(doc)...
+        reflectRedirectedUrl()
+        if document.location.hash
+          document.location.href = document.location.href
+        else
+          resetScrollPosition()
+        triggerEvent 'page:load'
       else
-        resetScrollPosition()
-      triggerEvent 'page:load'
-    else
-      document.location.href = url
-
-  xhr.onloadend = -> xhr = null
-  xhr.onabort   = -> rememberCurrentUrl()
-  xhr.onerror   = -> document.location.href = url
-
-  xhr.send()
+        document.location.href = url
+  
+    xhr.onloadend = -> xhr = null
+    xhr.onabort   = -> rememberCurrentUrl()
+    xhr.onerror   = -> document.location.href = url
+  
+    xhr.send()
 
 beforeFetch = (cb) ->
   go = triggerEvent('page:beforeFetch')
