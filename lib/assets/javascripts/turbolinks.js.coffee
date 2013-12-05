@@ -44,6 +44,8 @@ fetchReplacement = (url) ->
 
 beforeFetch = (cb) ->
   go = triggerEvent('page:beforeFetch')
+  console.log('go')
+  console.log(go)
   if go
     cb()
   else
