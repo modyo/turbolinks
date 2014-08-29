@@ -67,16 +67,23 @@ fetchHistory = (cachedPage) ->
 cacheCurrentPage = ->
   currentStateUrl = new ComponentUrl currentState.url
 
-  pageCache[currentStateUrl.absolute] =
-    url:                      currentStateUrl.relative,
-    body:                     document.body,
-    title:                    document.title,
-    positionY:                window.pageYOffset,
-    positionX:                window.pageXOffset,
-    cachedAt:                 new Date().getTime(),
-    transitionCacheDisabled:  document.querySelector('[data-no-transition-cache]')?
+  if ModyoCore.blackList(currentState.url) == true
+    return
+  else if ModyoCore.blackList(currentState.url) == 'refresh'
+    window.WarningExit.remove()
+    document.location.reload(true)
+    return
+  else
+    pageCache[currentStateUrl.absolute] =
+      url:                      currentStateUrl.relative,
+      body:                     document.body,
+      title:                    document.title,
+      positionY:                window.pageYOffset,
+      positionX:                window.pageXOffset,
+      cachedAt:                 new Date().getTime(),
+      transitionCacheDisabled:  document.querySelector('[data-no-transition-cache]')?
 
-  constrainPageCacheTo cacheSize
+    constrainPageCacheTo cacheSize
 
 pagesCached = (size = cacheSize) ->
   cacheSize = parseInt(size) if /^[\d]+$/.test size
