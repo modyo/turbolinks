@@ -69,10 +69,6 @@ cacheCurrentPage = ->
 
   if ModyoCore.blackList(currentState.url) == true
     return
-  else if ModyoCore.blackList(currentState.url) == 'refresh'
-    window.WarningExit.remove()
-    document.location.reload(true)
-    return
   else
     pageCache[currentStateUrl.absolute] =
       url:                      currentStateUrl.relative,
